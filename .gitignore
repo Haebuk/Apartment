@@ -2,7 +2,8 @@
 data/downloaded
 data/processed
 data/interim
-
+*.model
+*.wordvectors
 # Logs
 training/logs
 
