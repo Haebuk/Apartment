@@ -10,6 +10,7 @@ from sklearn.preprocessing import  LabelEncoder
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_squared_error
 from gensim.models.word2vec import Word2Vec
+from gensim.models import FastText
 import xgboost as xgb
 import lightgbm as lgb
 import re
@@ -42,10 +43,11 @@ for i, brand in enumerate(top10):
     test_df.loc[test_df['apt'].str.contains(brand), 'top10'] = 1
 
 print('apt 임베딩')
-vector_size = 256
+vector_size = 512
 epochs = 100
-apt_w2v = Word2Vec.load(f'apt_w2v_{vector_size}_sg_{epochs}.model')
-train_df['apt_embedded'] = train_df['apt'].apply(lambda x: apt_w2v.wv[x])
+apt_emb = FastText.load(f'apt_ft_{vector_size}_sg_{epochs}.model')
+# apt_emb = Word2Vec.load(f'apt_w2v_{vector_size}_sg_{epochs}.model')
+train_df['apt_embedded'] = train_df['apt'].apply(lambda x: apt_emb.wv[x])
 
 # test 시작 거래연월인 인덱스 저장
 test_start = train_df.loc[train_df['transaction_year_month'] == 201701, 'transaction_year_month'].index[0]
@@ -86,8 +88,11 @@ busan_set = set(train_df.loc[train_df['city']=='부산광역시', 'dong'])
 same_dong = seoul_set & busan_set
 
 print('dong 임베딩')
-dong_w2v = Word2Vec.load(f'dong_w2v_{vector_size}_sg_{epochs}.model')
-train_df['dong_embedded'] = train_df['dong'].apply(lambda x: dong_w2v.wv[x])
+vector_size = 32
+epochs = 100
+# dong_w2v = Word2Vec.load(f'dong_w2v_{vector_size}_sg_{epochs}.model')
+dong_emb = FastText.load(f'dong_ft_{vector_size}_sg_{epochs}.model')
+train_df['dong_embedded'] = train_df['dong'].apply(lambda x: dong_emb.wv[x])
 train_df.head()
 
 # 최소값이 -4이므로 4를 더해서 음수를 없애고 순서형범주처리
@@ -147,6 +152,7 @@ def objective(trial):
     param = {
         'objective': 'regression', # 회귀
         'verbose': -1,
+        'num_threads': 2,
         'device': 'cpu',
         'metric': 'rmse', 
         'max_depth': trial.suggest_int('max_depth',3, 15),
