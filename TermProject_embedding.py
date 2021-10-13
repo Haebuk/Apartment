@@ -43,7 +43,7 @@ for i, brand in enumerate(top10):
     test_df.loc[test_df['apt'].str.contains(brand), 'top10'] = 1
 
 print('apt 임베딩')
-vector_size = 512
+vector_size = 256
 epochs = 100
 apt_emb = FastText.load(f'apt_ft_{vector_size}_sg_{epochs}.model')
 # apt_emb = Word2Vec.load(f'apt_w2v_{vector_size}_sg_{epochs}.model')
@@ -88,9 +88,9 @@ busan_set = set(train_df.loc[train_df['city']=='부산광역시', 'dong'])
 same_dong = seoul_set & busan_set
 
 print('dong 임베딩')
-vector_size = 32
+vector_size = 256
 epochs = 100
-# dong_w2v = Word2Vec.load(f'dong_w2v_{vector_size}_sg_{epochs}.model')
+# dong_emb = Word2Vec.load(f'dong_w2v_{vector_size}_sg_{epochs}.model')
 dong_emb = FastText.load(f'dong_ft_{vector_size}_sg_{epochs}.model')
 train_df['dong_embedded'] = train_df['dong'].apply(lambda x: dong_emb.wv[x])
 train_df.head()
@@ -152,8 +152,8 @@ def objective(trial):
     param = {
         'objective': 'regression', # 회귀
         'verbose': -1,
-        'num_threads': 2,
-        'device': 'cpu',
+        'num_threads': 6,
+        'device': 'gpu',
         'metric': 'rmse', 
         'max_depth': trial.suggest_int('max_depth',3, 15),
         'learning_rate': trial.suggest_loguniform("learning_rate", 1e-8, 1e-2),
